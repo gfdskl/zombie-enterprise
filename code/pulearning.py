@@ -5,18 +5,34 @@ import matplotlib.pyplot as plt
 import os
 import sklearn
 from xgboost.sklearn import XGBClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+
 import pickle
 
 
 class PULlearning():
-    def __init__(self,data):
+    # Classifier = lambda classifier:classifier()
+
+    # def Classifier(self):
+    #     return self.classifier()
+
+    def __init__(self,data,classifier):
         super().__init__()
         self.data = data
+        self.classifier = classifier
+        
 
     def Spy(self):
         # 用Spy算法找到可靠的负样本
-        if os.path.exists('xgboost.pickle'):
-            with open('xgboost.pickle', 'rb') as fr:
+        model_name = self.classifier+'.pickle'
+        model_dir = 'model'
+        full_name = os.path.join(model_dir,model_name)
+        if not os.path.exists(model_dir):
+            os.mkdir(model_dir)
+        if os.path.exists(full_name):
+            with open(full_name, 'rb') as fr:
                 classifier = pickle.load(fr)
                 return classifier
 
@@ -25,7 +41,6 @@ class PULlearning():
 
         p = np.argwhere(y==1).reshape(-1,)
         u = np.argwhere(y!=1).reshape(-1,)
-        # ru = set()
 
         row_rand_array = np.arange(p.shape[0])
         np.random.shuffle(row_rand_array)
@@ -43,7 +58,8 @@ class PULlearning():
         new_x = np.vstack((PS,US))
         new_y = np.vstack((PS_label,US_label)).reshape(-1,)
 
-        classifier = XGBClassifier()
+        # classifier = XGBClassifier()
+        classifier = eval(self.classifier)()
         classifier.fit(new_x,new_y)
 
         S = x[s]
@@ -64,29 +80,20 @@ class PULlearning():
         
         classifier.fit(new_x,new_y)
 
-        with open('xgboost.pickle', 'wb') as fw:
+        with open(full_name, 'wb') as fw:
             pickle.dump(classifier, fw)
         return classifier
 
 
 
 
-
-
-
-
-    def myClassifier(self,classifier_name,x):
-        pass
-
     def getTr(self,classifier,S):
         pre_y_S = classifier.predict_proba(S)
-        # pre_y_U = classifier.predict_proba(U)
         best_tr = 0
 
         for i in range(0,100):
             tr = i/100
             a = len(np.argwhere(pre_y_S[:,-1]>tr))/pre_y_S.shape[0]
-            # b = len(np.argwhere(pre_y_U[:,-1]>tr))/pre_y_U.shape[0]
             if a < 0.975:
                 break
             best_tr = tr

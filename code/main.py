@@ -6,6 +6,7 @@ import os
 import sklearn
 import seaborn as sns
 from sklearn.cluster import KMeans
+import warnings
 
 from settings import Settings
 from load_data import loadData
@@ -14,10 +15,15 @@ from pulearning import PULlearning
 import OTO
 import model_eval as me
 
+
+warnings.filterwarnings("ignore")
 # 导入训练集和验证集数据
+ss = Settings()
 dir = 'process_data'
 TRAIN_DIR = os.path.join(dir,'train_process.csv')
 VERIFY_DIR = os.path.join(dir,'verify_process.csv')
+PRINTX = lambda x:print ('*'*x)
+
 
 if not os.path.exists(TRAIN_DIR):
     train,verify = OTO.preProcess_train_verify()
@@ -25,19 +31,36 @@ else:
     train,verify = pd.read_csv(TRAIN_DIR),pd.read_csv(VERIFY_DIR)
 
 
-# 训练并保存模型
-pu = PULlearning(train)
-classifier = pu.Spy()
+# # 训练并保存模型
+# pu = PULlearning(train,'XGBClassifier')
+# classifier = pu.Spy()
 
 
-# 使用验证集评估
-verify_x = verify.iloc[:,:-1].values
-verify_y = verify.iloc[:,-1].values
-pred_verify_y = classifier.predict(verify_x)
-pred_verify_y[np.argwhere(pred_verify_y==-1)] = 0
+# # 使用验证集评估
+# verify_x = verify.iloc[:,:-1].values
+# verify_y = verify.iloc[:,-1].values
+# pred_verify_y = classifier.predict(verify_x)
+# pred_verify_y[np.argwhere(pred_verify_y==-1)] = 0
 
-verify_y[np.argwhere(verify_y==-1)] = 0
-me.evalModel(verify_y,pred_verify_y)
+# verify_y[np.argwhere(verify_y==-1)] = 0
+# me.evalModel(verify_y,pred_verify_y)
+
+for i in ss.MODEL:
+    print ("model:"+i)
+    # 训练并保存模型
+    pu = PULlearning(train,i)
+    classifier = pu.Spy()
+
+
+    # 使用验证集评估
+    verify_x = verify.iloc[:,:-1].values
+    verify_y = verify.iloc[:,-1].values
+    pred_verify_y = classifier.predict(verify_x)
+    pred_verify_y[np.argwhere(pred_verify_y==-1)] = 0
+
+    verify_y[np.argwhere(verify_y==-1)] = 0
+    me.evalModel(verify_y,pred_verify_y)
+    PRINTX(100)
 
 
 
