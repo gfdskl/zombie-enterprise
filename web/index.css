@@ -1,0 +1,66 @@
+#app {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.el-header {
+    text-align: center;
+    font-size: xx-large;
+    font-weight: bold;
+    color: white;
+    margin-bottom: -80px;
+    position: relative;
+    z-index: 1;
+}
+
+.head-img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 50px;
+}
+
+.el-row {
+    margin-bottom: 60px;
+}
+
+.method1-div {
+    text-align: justify;
+    width: 80%;
+    margin: 40px auto 0 auto;
+}
+
+.method-h3 {
+    font-size: xx-large;
+    color: rgb(55, 50, 50);
+    text-align: center;
+}
+
+.csv-img {
+    width: 150px;
+    height: 150px;
+}
+
+.rst-img {
+    width: 150px;
+    height: 150px;
+    float: right;
+    margin-top: 30px;
+}
+
+.method-p {
+    color: rgb(120, 115, 115);
+    margin-bottom: 0px;
+    line-height: 30px;
+}
+
+.method2-div {
+    text-align: center;
+}
+
+.form-div {
+    width: 60%;
+    margin: 20px auto 0px auto;
+}
+
+

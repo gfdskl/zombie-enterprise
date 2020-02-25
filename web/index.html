@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./index.css" <!-- import Vue before Element -->
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <title>Zombie Finder</title>
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="60px">
+                <h1>Zombie Finder</h1>
+            </el-header>
+        </el-container>
+
+        <el-container>
+            <el-main>
+                <img src="./find.png" class="head-img">
+
+                <el-row :gutter="20">
+                    <el-col :span="14">
+                        <div class="method1-div">
+                            <h3 class="method-h3">上传完整的数据表</h3>
+                            <p class="method-p">选择符合标准的4张csv表格，模型将输出表格中所有数据的预测结果。四张表格分别为基本信息表（文件名包含"base"），知识产权表（文件名包含"knowledge"），财务信息表（文件名包含"money"）和年度报表（文件名包含"year"）。</p>
+                        </div>
+                    </el-col>
+
+                    <el-col :span="8">
+                        <el-upload drag multiple ref="upload" accept=".csv" :limit="4" :file-list="fileList" action="http://127.0.0.1:5000/upload"
+                            :on-exceed="showDialog" :on-change="toggleUploadButton" :on-remove="toggleUploadButton" :auto-upload="false">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击选择</em></div>
+                            <div class="el-upload__tip" slot="tip">* 只能上传符合要求的4份csv文件</div>
+                        </el-upload>
+
+                        <el-button :disabled="uploadButtonDisable" style="margin-top: 15px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+
+                        <el-dialog title="提示" :visible.sync="dialogShow" width="30%" :before-close="handleClose">
+                            <span>只能上传4份csv文件！</span>
+                            <span slot="footer" class="dialog-footer">
+                                <el-button type="primary" @click="dialogShow = false">确 定</el-button>
+                            </span>
+                        </el-dialog>
+                    </el-col>
+                </el-row>
+
+                <div class="method2-div">
+                    <h3 class="method-h3">输入单条数据</h3>
+                    <p class="method-p">在下方的表单中输入指定的特征信息，模型将根据这些特征来输出预测结果。</p>
+
+                    <el-button type="text" @click="showForm">
+                        {{ buttonText }} <i class="el-icon-caret-bottom"></i>
+                    </el-button>
+
+                    <div v-show="divShow" class="form-div">
+                        <el-form :model="form" label-width="150px">
+                            <el-form-item label="近三年纳税均值">
+                                <el-input v-model="form.taxMean"></el-input>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+
+            </el-main>
+        </el-container>
+    </div>
+</body>
+
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            divShow: false,
+            buttonText: '显示表单',
+            form: {
+                taxMean: ''
+            },
+            fileList: [],
+            uploadButtonDisable: true,
+            dialogShow: false
+        },
+        methods: {
+            showForm: function () {
+                this.divShow = !this.divShow;
+                if (this.divShow) {
+                    this.buttonText = '隐藏表单'
+                } else {
+                    this.buttonText = '显示表单'
+                }
+            },
+            showDialog: function() {
+                this.dialogShow = true;
+            },
+            submitUpload: function() {
+                this.$refs.upload.submit();
+            },
+            toggleUploadButton: function(file, fileList) {
+                this.uploadButtonDisable = (fileList.length != 4)
+            }
+        }
+    })
+</script>
+
+</html>
