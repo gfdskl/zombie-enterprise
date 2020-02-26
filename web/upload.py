@@ -1,9 +1,10 @@
 from flask import Flask, request
 import os
+import json
 
 app = Flask(__name__)
 app.debug = True
-app.secret_key = "helloworld"
+app.config["UPLOAD_PATH"] = "/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads"
 
 @app.route("/")
 def hello_world():
@@ -11,12 +12,22 @@ def hello_world():
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
-    if request.method == "POST":
-        f = request.files["file"]
-        base_path = os.path.abspath(os.path.dirname(__file__))
-        upload_path = os.path.join(base_path, "uploads", f.filename)
-        f.save(upload_path)
-        return "Success"
+    f = request.files["file"]
+    upload_path = os.path.join(app.config["UPLOAD_PATH"], f.filename)
+    f.save(upload_path)
+    return "Success"
+
+@app.route("/remove", methods=["GET", "POST"])
+def remove():
+    data = json.loads(request.get_data(as_text=True))
+    file_name = data["fileName"]
+    file_path = os.path.join(app.config["UPLOAD_PATH"], file_name)
+    os.remove(file_path)
+    return "Success"
+
+@app.route("/predict", methods=["GET"])
+def predict():
+    return "Success"
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,2 +1,4 @@
 *.ipynb_checkpoints
 *.pyc
+*/uploads/*.csv
+.vscode

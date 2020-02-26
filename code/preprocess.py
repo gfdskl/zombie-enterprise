@@ -34,7 +34,8 @@ class preProcess():
 
         union_table_id = union_table['ID']
         del union_table['ID']
-        self.saveData(union_table,union_table_id)
+        if self.saveName:
+            self.saveData(union_table,union_table_id)
         return union_table
 
     def unionAllTable(self):
