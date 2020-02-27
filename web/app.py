@@ -13,15 +13,19 @@ def hello_world():
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     f = request.files["file"]
-    upload_path = os.path.join(app.config["UPLOAD_PATH"], f.filename)
+    key = request.form.get("suffixKey")
+    upload_dir = os.path.join(app.config["UPLOAD_PATH"], key)
+    if not os.path.exists(upload_dir):
+        os.mkdir(upload_dir)
+    upload_path = os.path.join(upload_dir, f.filename)
     f.save(upload_path)
     return "Success"
 
 @app.route("/remove", methods=["GET", "POST"])
 def remove():
-    data = json.loads(request.get_data(as_text=True))
-    file_name = data["fileName"]
-    file_path = os.path.join(app.config["UPLOAD_PATH"], file_name)
+    file_name = request.form.get("fileName")
+    key = request.form.get("suffixKey")
+    file_path = os.path.join(app.config["UPLOAD_PATH"], key, file_name)
     os.remove(file_path)
     return "Success"
 

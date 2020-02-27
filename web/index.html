@@ -32,7 +32,7 @@
                     </el-col>
 
                     <el-col :span="8">
-                        <el-upload drag multiple accept=".csv" :limit="4" :file-list="fileList" action="http://127.0.0.1:5000/upload"
+                        <el-upload drag multiple accept=".csv" :limit="4" :file-list="fileList" action="http://127.0.0.1:5000/upload" :data="uploadData"
                             :on-exceed="showDialog" :on-change="handleChange" :on-remove="handleRemove">
                             <i class="el-icon-upload"></i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
@@ -79,17 +79,19 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <script>
+    const Key = Math.random().toString(36).slice(-8);
     new Vue({
         el: "#app",
         data: {
             divShow: false,
+            fileList: [],
+            uploadButtonDisable: true,
+            dialogShow: false,
+            uploadData: {suffixKey: Key},
             buttonText: '显示表单',
             form: {
                 taxMean: ''
-            },
-            fileList: [],
-            uploadButtonDisable: true,
-            dialogShow: false
+            }
         },
         methods: {
             showForm: function () {
@@ -107,7 +109,15 @@
                 this.uploadButtonDisable = (fileList.length != 4);
             },
             handleRemove: function(file, fileList) {
-                axios.post("http://127.0.0.1:5000/remove", {fileName: file.name});
+                let param = new FormData();
+                param.append("fileName", file.name);
+                param.append("suffixKey", Key);
+                let config = {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+                axios.post("http://127.0.0.1:5000/remove", param, config);
                 this.uploadButtonDisable = true;
             },
             startPredict: function() {
