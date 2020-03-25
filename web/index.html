@@ -27,19 +27,23 @@
                     <el-col :span="14">
                         <div class="method1-div">
                             <h3 class="method-h3">上传完整的数据表</h3>
-                            <p class="method-p">选择符合标准的4张csv表格，模型将输出表格中所有数据的预测结果。四张表格分别为基本信息表（文件名包含"base"），知识产权表（文件名包含"knowledge"），融资信息表（文件名包含"money"）和年度报表（文件名包含"year"）。</p>
+                            <p class="method-p">
+                                选择符合标准的4张csv表格，模型将输出表格中所有数据的预测结果。四张表格分别为基本信息表（文件名包含"base"），知识产权表（文件名包含"knowledge"），融资信息表（文件名包含"money"）和年度报表（文件名包含"year"）。
+                            </p>
                         </div>
                     </el-col>
 
                     <el-col :span="8">
-                        <el-upload drag multiple accept=".csv" :limit="4" :file-list="fileList" action="http://127.0.0.1:5000/upload" :data="uploadData"
-                            :on-exceed="showDialog" :on-change="handleChange" :on-remove="handleRemove">
+                        <el-upload drag multiple accept=".csv" :limit="4" :file-list="fileList"
+                            action="http://127.0.0.1:5000/upload" :data="uploadData" :on-exceed="showDialog"
+                            :on-change="handleChange" :on-remove="handleRemove">
                             <i class="el-icon-upload"></i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                             <div class="el-upload__tip" slot="tip">* 只能上传符合要求的4份csv文件</div>
                         </el-upload>
 
-                        <el-button :disabled="uploadButtonDisable" style="margin-top: 15px;" size="small" type="success" @click="startPredict">开始预测</el-button>
+                        <el-button :disabled="uploadButtonDisable" style="margin-top: 15px;" size="small" type="success"
+                            @click="startPredict">开始预测</el-button>
 
                         <el-dialog title="提示" :visible.sync="dialogShow" width="30%" :before-close="handleClose">
                             <span>只能上传4份csv文件！</span>
@@ -50,7 +54,23 @@
                     </el-col>
                 </el-row>
 
-                <div class="method2-div">
+                <div v-show="searchAble" class="portrait-div">
+                    <el-input placeholder="输入ID查询企业信息" suffix-icon="el-icon-search" v-model="searchID" @change="setLabels"></el-input>
+                    <el-row v-show="portraitShow">
+                      <el-col :span="8" style="text-align: left;">
+                          <p>企业编号：{{portrait["ID"]}}</p>
+                          <p>注册时间：{{portrait["注册时间"]}}年</p>
+                          <p>注册资本：{{portrait["注册资本"]}}万元</p>
+                      </el-col>
+                      <el-col :span="16" style="margin-top: 10px;">
+                          <template v-for="label in labels">
+                            <el-tag v-show="label.show" :type="label.type" style="margin: 5px;">{{label.text}}</el-tag>
+                          </template>
+                      </el-col>
+                    </el-row>
+                </div>
+
+                <!-- <div style="text-align: center;">
                     <h3 class="method-h3">输入单条数据</h3>
                     <p class="method-p">在下方的表单中输入指定的特征信息，模型将根据这些特征来输出预测结果。</p>
 
@@ -65,7 +85,7 @@
                             </el-form-item>
                         </el-form>
                     </div>
-                </div>
+                </div> -->
 
             </el-main>
         </el-container>
@@ -80,18 +100,85 @@
 
 <script>
     const Key = Math.random().toString(36).slice(-8);
+    const label_state = {
+                    "企业规模": [
+                        { show: true, type: "", text: "微型企业" },
+                        { show: true, type: "", text: "小型企业" },
+                        { show: true, type: "", text: "中型企业" },
+                        { show: true, type: "", text: "大型企业" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "创新能力": [
+                        { show: true, type: "danger", text: "未申请知识产权" },
+                        { show: false, type: "", text: "" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "知识产权完备" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "净利润": [
+                        { show: true, type: "danger", text: "三年内严重亏损" },
+                        { show: true, type: "warning", text: "三年内存在亏损" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "利润高" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "纳税总额": [
+                        { show: true, type: "danger", text: "连续三年未纳税" },
+                        { show: false, type: "", text: "" },
+                        { show: false, type: "", text: "" },
+                        { show: false, type: "", text: "" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "销售净利率": [
+                        { show: true, type: "danger", text: "盈利能力极低" },
+                        { show: true, type: "warning", text: "盈利能力较低" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "盈利能力强" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "资产净利率": [
+                        { show: true, type: "danger", text: "资金运作极差" },
+                        { show: true, type: "warning", text: "资金运作不良" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "资金运作好" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "资产负债率": [
+                        { show: true, type: "", text: "财务风险低" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "适宜的负债水平" },
+                        { show: true, type: "warning", text: "投资风险高" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "资金收益率": [
+                        { show: true, type: "danger", text: "不适合投资" },
+                        { show: false, type: "", text: "" },
+                        { show: false, type: "", text: "" },
+                        { show: true, type: "success", text: "值得投资" },
+                        { show: false, type: "", text: "" }
+                    ],
+                    "flag": [
+                        { show: true, type: "success", text: "僵尸企业风险低"},
+                        { show: true, type: "danger", text: "僵尸企业风险高"}
+                    ]
+                };
     new Vue({
         el: "#app",
         data: {
             divShow: false,
             fileList: [],
             uploadButtonDisable: true,
-            dialogShow: false,
-            uploadData: {suffixKey: Key},
+            uploadData: { suffixKey: Key },
             buttonText: '显示表单',
             form: {
                 taxMean: ''
-            }
+            },
+            searchAble: false,
+            dialogShow: false,
+            searchID: '',
+            portraitShow: false,
+            portrait: {},
+            labels: [],
         },
         methods: {
             showForm: function () {
@@ -102,13 +189,13 @@
                     this.buttonText = '显示表单'
                 }
             },
-            showDialog: function() {
+            showDialog: function () {
                 this.dialogShow = true;
             },
-            handleChange: function(file, fileList) {
+            handleChange: function (file, fileList) {
                 this.uploadButtonDisable = (fileList.length != 4);
             },
-            handleRemove: function(file, fileList) {
+            handleRemove: function (file, fileList) {
                 let param = new FormData();
                 param.append("fileName", file.name);
                 param.append("suffixKey", Key);
@@ -120,10 +207,56 @@
                 axios.post("http://127.0.0.1:5000/remove", param, config);
                 this.uploadButtonDisable = true;
             },
-            startPredict: function() {
-                axios.get("http://127.0.0.1:5000/predict")
+            startPredict: function () {
+                let param = new FormData();
+                param.append("suffixKey", Key);
+                axios.post("http://127.0.0.1:5000/predict", param)
+                    .then(res => {
+                        console.log(res);
+                        if (res.status == "200") {
+                            let blob = new Blob([res.data]);
+                            let link = document.createElement('a');
+                            link.download = "result.csv";
+                            link.style.display = "none";
+                            link.href = URL.createObjectURL(blob);
+                            document.body.appendChild(link);
+                            link.click();
+                            URL.revokeObjectURL(link.href);
+                            document.body.removeChild(link);
+                            this.searchAble = true;
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+            },
+            setLabels: function () {
+                if (this.searchID == '') {
+                    this.portraitShow = false;
+                    return;
+                }
+                axios.get("http://127.0.0.1:5000/search", {
+                    params: {
+                        suffixKey: Key,
+                        id: this.searchID
+                    }
+                })
                 .then(res => {
                     console.log(res)
+                    if (res.data == '') {
+                        this.$message({
+                            message: "无效的企业编号！",
+                            type: "error"
+                        })
+                        return;
+                    }
+                    this.portrait = res.data[0]
+                    this.labels = []
+                    for (var key in label_state) {
+                        let level = this.portrait[key]
+                        this.labels.push(label_state[key][level]);
+                    }
+                    this.portraitShow = true;
                 })
                 .catch(err => {
                     console.error(err); 
