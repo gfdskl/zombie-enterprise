@@ -32,10 +32,12 @@ class preProcess():
         columns_num = union_table.shape[1]
         union_table.insert(columns_num-1,'flag',union_table.pop('flag'))
 
-        union_table_id = union_table['ID']
-        del union_table['ID']
         if self.saveName:
+            union_table_id = union_table['ID']
+            del union_table['ID']
             self.saveData(union_table,union_table_id)
+        else:
+            union_table.set_index('ID', inplace=True)
         return union_table
 
     def unionAllTable(self):
