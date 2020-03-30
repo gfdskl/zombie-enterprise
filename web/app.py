@@ -5,7 +5,7 @@ from multiprocessing import Process
 import json
 from waiting import wait, TimeoutExpired
 
-LIB_ROOT = "/Users/sameal/Documents/PROJECT/zombie_enterprise/lib"
+LIB_ROOT = "/Users/sameal/Documents/PROJECT/zombie_enterprise/code"
 sys.path.append(LIB_ROOT)
 import predict_tools
 
@@ -65,6 +65,16 @@ def search():
     except TimeoutExpired:
         return "Timeout", 408
 
+@app.route("/chart", methods=["GET"])
+def chart():
+    key = request.args.get("suffixKey")
+    search_id = request.args.get("id")
+    byclass = request.args.get("class")
+    upload_dir = os.path.join(app.config["UPLOAD_PATH"], key)
+    data = predict_tools.chart(upload_dir, search_id, byclass)
+    if data is None:
+        return ""
+    return data
 
 if __name__ == "__main__":
     app.run(debug=True)

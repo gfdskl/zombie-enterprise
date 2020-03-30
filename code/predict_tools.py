@@ -16,7 +16,7 @@ dtypes = [
         '内部融资和贸易融资额度': np.float64, '内部融资和贸易融资成本': np.float64, '项目融资和政策融资额度': np.float64, '项目融资和政策融资成本': np.float64},
     {'ID': "Int64", 'year': np.float64, '从业人数': np.float64, '资产总额': np.float64, '负债总额': np.float64, '营业总收入': np.float64, '主营业收入': np.float64, '利润总额': np.float64, '净利润': np.float64, '纳税总额': np.float64, '所有者权益合计': np.float64}]
 
-model_path = "/Users/sameal/Documents/PROJECT/zombie_enterprise/lib/model/XGBClassifier_web.pickle"
+model_path = "/Users/sameal/Documents/PROJECT/zombie_enterprise/code/model/XGBClassifier_web.pickle"
 
 
 def get_file_path(dir_path):
@@ -37,12 +37,6 @@ def load_data(dir_path):
     return data
 
 
-def preprocess_data(data: [pd.DataFrame]):
-    pp = preProcess(data, saveName=None)
-    union_table = pp.precoss()
-    return union_table
-
-
 def year_fea(yb_df):
     f1 = lambda row: row["净利润"] / row["营业总收入"] if row["营业总收入"] else None
     f2 = lambda row: row["净利润"] / row["资产总额"] if row["资产总额"] else None
@@ -56,17 +50,14 @@ def year_fea(yb_df):
 
 def portrait(data):
     base, knowledge, money, year = copy.deepcopy(data)
-    base.set_index('ID', inplace=True)
     base["注册资本"] = base["注册资本"] / 10
-    knowledge.set_index('ID', inplace=True)
-    year.set_index('ID', inplace=True)
 
     creat_label = knowledge.sum(axis=1)
     creat_label.name = "创新能力"
     
     year_fea(year)
     year_mean = year.groupby('ID').mean().drop(columns="year")
-    yb_mean = pd.concat([base[["行业"]], year_mean], axis=1)
+    yb_mean = pd.concat([base, year_mean], axis=1)
 
     def scale_classify(row):
         if row["行业"] == "交通运输业":
@@ -86,6 +77,8 @@ def portrait(data):
 
     scale_label = yb_mean.apply(scale_classify, axis=1)
     scale_label.name = "企业规模"
+    scales = ["微型企业", "小型企业", "中型企业", "大型企业"]
+    yb_mean["企业规模"] = scale_label.apply(lambda row: scales[row])
 
     sel_columns = ["净利润", "纳税总额", "销售净利率", "资产净利率", "资产负债率", "资金收益率"]
     cut_bins = {
@@ -98,18 +91,17 @@ def portrait(data):
     }
     sel_df = year_mean[sel_columns]
     sel_df = sel_df.apply(lambda col: pd.cut(col, cut_bins[col.name], labels=[0, 1, 2, 3])).astype(int)
-    label_df = pd.concat([base[["注册时间", "注册资本"]], scale_label, creat_label, sel_df], axis=1)
+    label_df = pd.concat([base[["注册时间", "注册资本", "行业", "区域", "企业类型"]], scale_label, creat_label, sel_df], axis=1)
     label_columns = sel_columns + ["企业规模", "创新能力"]
     label_df[label_columns] = label_df[label_columns].fillna(4).astype(int)
-    label_df['ID'] = label_df.index
-    return label_df
+    return yb_mean, label_df
 
 
 def analyse(dir_path):
     data = load_data(dir_path)
-    label_df= portrait(data)
-    save_path = os.path.join(dir_path, "portrait.csv")
-    label_df.to_csv(save_path, header=True, index=False)
+    mean_df, label_df = portrait(data)
+    mean_df.to_csv(os.path.join(dir_path, "chart_data.csv"), header=True, index=True, index_label="ID")
+    label_df.to_csv(os.path.join(dir_path, "portrait.csv"), header=True, index=True, index_label="ID")
 
 
 def predict(dir_path):
@@ -130,14 +122,37 @@ def search(dir_path, search_id):
     portrait_path = os.path.join(dir_path, "portrait.csv")
     flag_path = os.path.join(dir_path, "result.csv")
     label_df = pd.read_csv(portrait_path)
+    label_df.set_index("ID", inplace=True, drop=False)
     flag_df = pd.read_csv(flag_path)
+    flag_df.set_index("ID", inplace=True)
     search_id = int(search_id)
-    if not search_id in label_df.ID.values:
+    if not search_id in label_df.index:
         return None
-    res_label = label_df[label_df.ID == search_id]
-    res_label["flag"] = int(flag_df[flag_df.ID == search_id].values[0, 1] > 0)
-    return res_label.to_json(orient="records")
+    res_label = label_df.loc[search_id]
+    res_label["flag"] = int(flag_df.loc[search_id].values[0] > 0)
+    return res_label.to_json()
+
+
+def chart(dir_path, search_id, byclass):
+    chart_path = os.path.join(dir_path, "chart_data.csv")
+    chart_df = pd.read_csv(chart_path)
+    chart_df.set_index("ID", inplace=True)
+    search_id = int(search_id)
+    if not search_id in chart_df.index:
+        return None
+    columns = ["从业人数", "资产总额", "负债总额", "营业总收入", "主营业务收入", "利润总额", "净利润", "纳税总额", "所有者权益合计", "销售净利率", "资产净利率", "资产负债率", "资金收益率"]
+    row = chart_df.loc[search_id]
+    if byclass == "all":
+        tmp = chart_df[columns]
+    else:
+        tmp = chart_df[chart_df[byclass] == row[byclass]]
+        tmp = tmp[columns]
+    mean = tmp.mean()
+    std = tmp.std()
+    row = row[columns]
+    res = (row - mean) / std
+    return res.to_json(orient="values")
 
 
 if __name__ == "__main__":
-    predict("/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads/ct79s9wf")
+    search("/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads/ct79s9wf", 28)

@@ -54,19 +54,61 @@
                     </el-col>
                 </el-row>
 
-                <div v-show="searchAble" class="portrait-div">
-                    <el-input placeholder="输入ID查询企业信息" suffix-icon="el-icon-search" v-model="searchID" @change="setLabels"></el-input>
+                <div class="portrait-div">
+                    <el-input v-show="searchAble" placeholder="输入ID查询企业信息" suffix-icon="el-icon-search"
+                        v-model="searchID" @change="setLabels"></el-input>
                     <el-row v-show="portraitShow">
-                      <el-col :span="8" style="text-align: left;">
-                          <p>企业编号：{{portrait["ID"]}}</p>
-                          <p>注册时间：{{portrait["注册时间"]}}年</p>
-                          <p>注册资本：{{portrait["注册资本"]}}万元</p>
-                      </el-col>
-                      <el-col :span="16" style="margin-top: 10px;">
-                          <template v-for="label in labels">
-                            <el-tag v-show="label.show" :type="label.type" style="margin: 5px;">{{label.text}}</el-tag>
-                          </template>
-                      </el-col>
+                        <el-col :span="10">
+                            <el-row>
+                                <h2 style="color: rgb(55, 50, 50); text-align: left; margin-bottom: 0;">企业基本信息</h4>
+                                <el-col :span="10" style="text-align: left;">
+                                    <p>企业编号：{{portrait["ID"]}}</p>
+                                    <p>注册时间：{{portrait["注册时间"]}}年</p>
+                                    <p>注册资本：{{portrait["注册资本"]}}万元</p>
+                                </el-col>
+                                <el-col :span="14" style="text-align: left;">
+                                    <p>所属行业：{{portrait["行业"]}}</p>
+                                    <p>所在区域：{{portrait["区域"]}}省</p>
+                                    <p>企业类型：{{portrait["企业类型"]}}</p>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="22">
+                                    <h2 style="color: rgb(55, 50, 50); text-align: left; margin-top: 10px;">企业画像标签</h4>
+                                    <template v-for="label in labels">
+                                        <el-tag v-show="label.show" :type="label.type" style="margin: 5px;">
+                                            {{label.text}}
+                                        </el-tag>
+                                    </template>
+                                </el-col>
+                            </el-row>
+                        </el-col>
+                        <el-col :span="14">
+                            <el-row>
+                                <el-col :span="18">
+                                    <h2 style="color: rgb(55, 50, 50);">企业数据与总体均值比较图</h2>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-dropdown style="margin-top: 30px;" @command="handleCommand">
+                                        <span class="el-dropdown-link">
+                                            选择分类<i class="el-icon-arrow-down el-icon--right"></i>
+                                        </span>
+                                        <el-dropdown-menu slot="dropdown">
+                                            <el-dropdown-item command="all">全部</el-dropdown-item>
+                                            <el-dropdown-item command="企业规模">企业规模</el-dropdown-item>
+                                            <el-dropdown-item command="行业">所属行业</el-dropdown-item>
+                                            <el-dropdown-item command="区域">所在区域</el-dropdown-item>
+                                            <el-dropdown-item command="企业类型">企业类型</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </el-dropdown>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <div>
+                                    <canvas id="chart"></canvas>
+                                </div>
+                            </el-row>
+                        </el-col>
                     </el-row>
                 </div>
 
@@ -97,71 +139,73 @@
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+
 
 <script>
     const Key = Math.random().toString(36).slice(-8);
     const label_state = {
-                    "企业规模": [
-                        { show: true, type: "", text: "微型企业" },
-                        { show: true, type: "", text: "小型企业" },
-                        { show: true, type: "", text: "中型企业" },
-                        { show: true, type: "", text: "大型企业" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "创新能力": [
-                        { show: true, type: "danger", text: "未申请知识产权" },
-                        { show: false, type: "", text: "" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "知识产权完备" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "净利润": [
-                        { show: true, type: "danger", text: "三年内严重亏损" },
-                        { show: true, type: "warning", text: "三年内存在亏损" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "利润高" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "纳税总额": [
-                        { show: true, type: "danger", text: "连续三年未纳税" },
-                        { show: false, type: "", text: "" },
-                        { show: false, type: "", text: "" },
-                        { show: false, type: "", text: "" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "销售净利率": [
-                        { show: true, type: "danger", text: "盈利能力极低" },
-                        { show: true, type: "warning", text: "盈利能力较低" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "盈利能力强" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "资产净利率": [
-                        { show: true, type: "danger", text: "资金运作极差" },
-                        { show: true, type: "warning", text: "资金运作不良" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "资金运作好" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "资产负债率": [
-                        { show: true, type: "", text: "财务风险低" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "适宜的负债水平" },
-                        { show: true, type: "warning", text: "投资风险高" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "资金收益率": [
-                        { show: true, type: "danger", text: "不适合投资" },
-                        { show: false, type: "", text: "" },
-                        { show: false, type: "", text: "" },
-                        { show: true, type: "success", text: "值得投资" },
-                        { show: false, type: "", text: "" }
-                    ],
-                    "flag": [
-                        { show: true, type: "success", text: "僵尸企业风险低"},
-                        { show: true, type: "danger", text: "僵尸企业风险高"}
-                    ]
-                };
+        "企业规模": [
+            { show: true, type: "", text: "微型企业" },
+            { show: true, type: "", text: "小型企业" },
+            { show: true, type: "", text: "中型企业" },
+            { show: true, type: "", text: "大型企业" },
+            { show: false, type: "", text: "" }
+        ],
+        "创新能力": [
+            { show: true, type: "danger", text: "未申请知识产权" },
+            { show: false, type: "", text: "" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "知识产权完备" },
+            { show: false, type: "", text: "" }
+        ],
+        "净利润": [
+            { show: true, type: "danger", text: "三年内严重亏损" },
+            { show: true, type: "warning", text: "三年内存在亏损" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "利润高" },
+            { show: false, type: "", text: "" }
+        ],
+        "纳税总额": [
+            { show: true, type: "danger", text: "连续三年未纳税" },
+            { show: false, type: "", text: "" },
+            { show: false, type: "", text: "" },
+            { show: false, type: "", text: "" },
+            { show: false, type: "", text: "" }
+        ],
+        "销售净利率": [
+            { show: true, type: "danger", text: "盈利能力极低" },
+            { show: true, type: "warning", text: "盈利能力较低" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "盈利能力强" },
+            { show: false, type: "", text: "" }
+        ],
+        "资产净利率": [
+            { show: true, type: "danger", text: "资金运作极差" },
+            { show: true, type: "warning", text: "资金运作不良" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "资金运作好" },
+            { show: false, type: "", text: "" }
+        ],
+        "资产负债率": [
+            { show: true, type: "", text: "财务风险低" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "适宜的负债水平" },
+            { show: true, type: "warning", text: "投资风险高" },
+            { show: false, type: "", text: "" }
+        ],
+        "资金收益率": [
+            { show: true, type: "danger", text: "不适合投资" },
+            { show: false, type: "", text: "" },
+            { show: false, type: "", text: "" },
+            { show: true, type: "success", text: "值得投资" },
+            { show: false, type: "", text: "" }
+        ],
+        "flag": [
+            { show: true, type: "success", text: "僵尸企业风险低" },
+            { show: true, type: "danger", text: "僵尸企业风险高" }
+        ]
+    };
     new Vue({
         el: "#app",
         data: {
@@ -179,6 +223,7 @@
             portraitShow: false,
             portrait: {},
             labels: [],
+            chart: ''
         },
         methods: {
             showForm: function () {
@@ -241,29 +286,86 @@
                         id: this.searchID
                     }
                 })
-                .then(res => {
-                    console.log(res)
-                    if (res.data == '') {
-                        this.$message({
-                            message: "无效的企业编号！",
-                            type: "error"
-                        })
-                        return;
+                    .then(res => {
+                        console.log(res)
+                        if (res.data == '') {
+                            this.$message({
+                                message: "无效的企业编号！",
+                                type: "error"
+                            })
+                            return;
+                        }
+                        this.portrait = res.data
+                        this.labels = []
+                        for (var key in label_state) {
+                            let level = this.portrait[key]
+                            this.labels.push(label_state[key][level]);
+                        }
+                        this.handleCommand("all");
+                        this.portraitShow = true;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+            },
+            handleCommand: function (command) {
+                if (this.searchID == '') {
+                    this.portraitShow = false;
+                    return;
+                }
+                axios.get("http://127.0.0.1:5000/chart", {
+                    params: {
+                        suffixKey: Key,
+                        id: this.searchID,
+                        class: command
                     }
-                    this.portrait = res.data[0]
-                    this.labels = []
-                    for (var key in label_state) {
-                        let level = this.portrait[key]
-                        this.labels.push(label_state[key][level]);
-                    }
-                    this.portraitShow = true;
                 })
-                .catch(err => {
-                    console.error(err); 
-                })
+                    .then(res => {
+                        console.log(res);
+                        data = res.data;
+                        this.plotChart(data);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+            },
+            plotChart: function (data) {
+                let c = ["rgba(248, 108, 110, 1)", "rgba(109, 193, 74, 1)"]
+                var colors = []
+                function setColors(item, index) {
+                    var idx = (item > 0) & 1;
+                    colors.push(c[idx]);
+                }
+                data.forEach(setColors);
+                var ctx = document.getElementById("chart").getContext("2d");
+                if (this.chart == '') {
+                    this.chart = new Chart(ctx, {
+                        type: "bar",
+                        data: {
+                            labels: ["从业人数", "资产总额", "负债总额", "营业总收入", "主营业务收入", "利润总额", "净利润", "纳税总额", "所有者权益合计", "销售净利率", "资产净利率", "资产负债率", "资金收益率"],
+                            datasets: [
+                                {
+                                    data: data,
+                                    backgroundColor: colors,
+                                }
+                            ]
+                        },
+                        options: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    })
+                }
+                else {
+                    this.chart.data.datasets[0].data = data;
+                    this.chart.data.datasets[0].backgroundColor = colors;
+                    this.chart.update();
+                }
             }
         }
     })
+
 </script>
 
 </html>
