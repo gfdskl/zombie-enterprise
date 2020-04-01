@@ -27,10 +27,10 @@ def get_file_path(dir_path):
     return (base_path, knowledge_path, money_path, year_path)
 
 
-def load_data(dir_path):
+def load_data(dir_path, index):
     file_path = get_file_path(dir_path)
     data = []
-    for i in range(4):
+    for i in index:
         table = pd.read_csv(file_path[i], encoding='gbk', dtype=dtypes[i])
         table.set_index("ID", inplace=True)
         data.append(table)
@@ -38,14 +38,14 @@ def load_data(dir_path):
 
 
 def year_fea(yb_df):
-    f1 = lambda row: row["净利润"] / row["营业总收入"] if row["营业总收入"] else None
-    f2 = lambda row: row["净利润"] / row["资产总额"] if row["资产总额"] else None
-    f3 = lambda row: row["负债总额"] / row["资产总额"] if row["资产总额"] else None
-    f4 = lambda row: row["净利润"] / row["所有者权益合计"] if row["所有者权益合计"] else None
-    yb_df["销售净利率"] = yb_df.apply(f1, axis=1)
-    yb_df["资产净利率"] = yb_df.apply(f2, axis=1)
-    yb_df["资产负债率"] = yb_df.apply(f3, axis=1)
-    yb_df["资金收益率"] = yb_df.apply(f4, axis=1)
+    tmp = yb_df["净利润"] / yb_df["营业总收入"]
+    yb_df["销售净利率"] = tmp.replace([-np.inf, np.inf], np.nan)
+    tmp = yb_df["净利润"] / yb_df["资产总额"]
+    yb_df["资产净利率"] = tmp.replace([-np.inf, np.inf], np.nan)
+    tmp = yb_df["负债总额"] / yb_df["资产总额"]
+    yb_df["资产负债率"] = tmp.replace([-np.inf, np.inf], np.nan)
+    tmp = yb_df["净利润"] / yb_df["所有者权益合计"]
+    yb_df["资金收益率"] = tmp.replace([-np.inf, np.inf], np.nan)
 
 
 def portrait(data):
@@ -98,14 +98,14 @@ def portrait(data):
 
 
 def analyse(dir_path):
-    data = load_data(dir_path)
+    data = load_data(dir_path, range(4))
     mean_df, label_df = portrait(data)
     mean_df.to_csv(os.path.join(dir_path, "chart_data.csv"), header=True, index=True, index_label="ID")
     label_df.to_csv(os.path.join(dir_path, "portrait.csv"), header=True, index=True, index_label="ID")
 
 
 def predict(dir_path):
-    base, _, _, year = load_data(dir_path)
+    base, year = load_data(dir_path, (0, 3))
     year = year.drop(columns="year").groupby("ID").mean()
     year_fea(year)
     union_table = pd.concat([base["注册资本"], year], axis=1, join_axes=[base.index])
@@ -144,6 +144,14 @@ def chart(dir_path, search_id, byclass):
     row = chart_df.loc[search_id]
     if byclass == "all":
         tmp = chart_df[columns]
+    elif byclass == "flag":
+        flag_path = os.path.join(dir_path, "result.csv")
+        flag_df = pd.read_csv(flag_path)
+        flag_df.set_index("ID", inplace=True)
+        search_flag = flag_df.loc[search_id].values[0]
+        ids = flag_df.index[flag_df.pred_flag == search_flag]
+        tmp = chart_df.loc[ids]
+        tmp = tmp[columns]
     else:
         tmp = chart_df[chart_df[byclass] == row[byclass]]
         tmp = tmp[columns]
@@ -155,4 +163,4 @@ def chart(dir_path, search_id, byclass):
 
 
 if __name__ == "__main__":
-    search("/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads/ct79s9wf", 28)
+    predict("/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads/33f9bb61")

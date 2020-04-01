@@ -95,6 +95,7 @@
                                         </span>
                                         <el-dropdown-menu slot="dropdown">
                                             <el-dropdown-item command="all">全部</el-dropdown-item>
+                                            <el-dropdown-item command="flag">僵尸标签</el-dropdown-item>
                                             <el-dropdown-item command="企业规模">企业规模</el-dropdown-item>
                                             <el-dropdown-item command="行业">所属行业</el-dropdown-item>
                                             <el-dropdown-item command="区域">所在区域</el-dropdown-item>
@@ -152,6 +153,10 @@
             { show: true, type: "", text: "大型企业" },
             { show: false, type: "", text: "" }
         ],
+        "flag": [
+            { show: true, type: "success", text: "僵尸企业风险低" },
+            { show: true, type: "danger", text: "僵尸企业风险高" }
+        ],
         "创新能力": [
             { show: true, type: "danger", text: "未申请知识产权" },
             { show: false, type: "", text: "" },
@@ -200,10 +205,6 @@
             { show: false, type: "", text: "" },
             { show: true, type: "success", text: "值得投资" },
             { show: false, type: "", text: "" }
-        ],
-        "flag": [
-            { show: true, type: "success", text: "僵尸企业风险低" },
-            { show: true, type: "danger", text: "僵尸企业风险高" }
         ]
     };
     new Vue({
