@@ -6,13 +6,18 @@ import json
 from waiting import wait, TimeoutExpired
 import time 
 
-LIB_ROOT = "/Users/sameal/Documents/PROJECT/zombie_enterprise/code"
+LIB_ROOT = "../code"
 sys.path.append(LIB_ROOT)
 import predict_tools
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 app.debug = True
-app.config["UPLOAD_PATH"] = "/Users/sameal/Documents/PROJECT/zombie_enterprise/web/uploads"
+app.config["UPLOAD_PATH"] = "./uploads"
+
+
+@app.route("/", methods=["GET"])
+def root():
+    return app.send_static_file("index.html")
 
 
 @app.route("/upload", methods=["POST"])

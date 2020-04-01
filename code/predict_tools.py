@@ -16,7 +16,7 @@ dtypes = [
         '内部融资和贸易融资额度': np.float64, '内部融资和贸易融资成本': np.float64, '项目融资和政策融资额度': np.float64, '项目融资和政策融资成本': np.float64},
     {'ID': "Int64", 'year': np.float64, '从业人数': np.float64, '资产总额': np.float64, '负债总额': np.float64, '营业总收入': np.float64, '主营业收入': np.float64, '利润总额': np.float64, '净利润': np.float64, '纳税总额': np.float64, '所有者权益合计': np.float64}]
 
-model_path = "/Users/sameal/Documents/PROJECT/zombie_enterprise/code/model/XGBClassifier_web.pickle"
+model_path = "/home/weirme/zombie-enterprise/code/model/XGBClassifier_web.pickle"
 
 
 def get_file_path(dir_path):

@@ -34,9 +34,9 @@
                     </el-col>
 
                     <el-col :span="8">
-                        <el-upload drag multiple accept=".csv" :limit="4" :file-list="fileList"
-                            action="http://127.0.0.1:5000/upload" :data="uploadData" :on-exceed="showDialog"
-                            :on-change="handleChange" :on-remove="handleRemove">
+                        <el-upload drag multiple accept=".csv" :limit="4"
+                            action="http://120.26.179.205/upload" :data="uploadData" :on-exceed="showDialog"
+                            :on-success="handleSuccess" :on-remove="handleRemove">
                             <i class="el-icon-upload"></i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                             <div class="el-upload__tip" slot="tip">* 只能上传符合要求的4份csv文件</div>
@@ -211,7 +211,7 @@
         el: "#app",
         data: {
             divShow: false,
-            fileList: [],
+            nFiles: 0,
             uploadButtonDisable: true,
             uploadData: { suffixKey: Key },
             buttonText: '显示表单',
@@ -238,8 +238,9 @@
             showDialog: function () {
                 this.dialogShow = true;
             },
-            handleChange: function (file, fileList) {
-                this.uploadButtonDisable = (fileList.length != 4);
+            handleSuccess: function (res, file, fileList) {
+                this.nFiles++;
+                this.uploadButtonDisable = (this.nFiles != 4);
             },
             handleRemove: function (file, fileList) {
                 let param = new FormData();
@@ -250,13 +251,14 @@
                         "Content-Type": "multipart/form-data"
                     }
                 }
-                axios.post("http://127.0.0.1:5000/remove", param, config);
+                axios.post("http://120.26.179.205/remove", param, config);
+                this.nFiles--;
                 this.uploadButtonDisable = true;
             },
             startPredict: function () {
                 let param = new FormData();
                 param.append("suffixKey", Key);
-                axios.post("http://127.0.0.1:5000/predict", param)
+                axios.post("http://120.26.179.205/predict", param)
                     .then(res => {
                         console.log(res);
                         if (res.status == "200") {
@@ -281,7 +283,7 @@
                     this.portraitShow = false;
                     return;
                 }
-                axios.get("http://127.0.0.1:5000/search", {
+                axios.get("http://120.26.179.205/search", {
                     params: {
                         suffixKey: Key,
                         id: this.searchID
@@ -314,7 +316,7 @@
                     this.portraitShow = false;
                     return;
                 }
-                axios.get("http://127.0.0.1:5000/chart", {
+                axios.get("http://120.26.179.205/chart", {
                     params: {
                         suffixKey: Key,
                         id: this.searchID,
