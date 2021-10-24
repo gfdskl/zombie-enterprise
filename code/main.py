@@ -15,8 +15,8 @@ from pulearning import PULlearning
 import OTO
 import model_eval as me
 
-
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore",category=DeprecationWarning)
+# warnings.filterwarnings("ignore")
 # 导入训练集和验证集数据
 ss = Settings()
 dir = 'process_data'

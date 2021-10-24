@@ -20,6 +20,10 @@
     margin-bottom: 50px;
 }
 
+.el-row {
+    margin-bottom: 60px;
+}
+
 .method1-div {
     text-align: justify;
     width: 80%;
@@ -50,14 +54,7 @@
     line-height: 30px;
 }
 
-.el-input {
-    width: 400px;
-    margin-top: 40px;
-    margin-bottom: 20px;
-}
-
-.portrait-div {
-    margin: 0 40px 0 40px;
+.method2-div {
     text-align: center;
 }
 
@@ -66,7 +63,4 @@
     margin: 20px auto 0px auto;
 }
 
-.el-dropdown-link {
-    cursor: pointer;
-    color: #409EFF;
-  }
+

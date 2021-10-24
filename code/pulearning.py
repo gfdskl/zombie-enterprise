@@ -4,10 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sklearn
+from sklearn.base import ClassifierMixin
 from xgboost.sklearn import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
+import xgboost
 
 import pickle
 
@@ -26,6 +28,10 @@ class PULlearning():
 
     def Spy(self):
         # 用Spy算法找到可靠的负样本
+        # if (self.classifier == 'XGBClassifier'):
+        #     model_name = self.classifier+'.xgb'
+        # else:
+        #     model_name = self.classifier+'.pickle'
         model_name = self.classifier+'.pickle'
         model_dir = 'model'
         full_name = os.path.join(model_dir,model_name)
@@ -34,6 +40,13 @@ class PULlearning():
         if os.path.exists(full_name):
             with open(full_name, 'rb') as fr:
                 classifier = pickle.load(fr)
+                # if (self.classifier == 'XGBClassifier'):
+                #     print ("full_name:"+full_name)
+                #     classifier = xgboost.Booster()
+                #     classifier.load_model(model_name)
+                #     # classifier = xgboost.load_model(fr)
+                # else:
+                #     classifier = pickle.load(fr)
                 return classifier
 
         x = self.data.iloc[:,:-1].values
@@ -79,8 +92,12 @@ class PULlearning():
         new_y = np.vstack((P_label,RN_label)).reshape(-1,)
         
         classifier.fit(new_x,new_y)
-
         with open(full_name, 'wb') as fw:
+                # if (self.classifier == 'XGBClassifier'):
+                #     # classifier.save_model(fw)
+                #     pass
+                # else:
+                #     pickle.dump(classifier, fw)
             pickle.dump(classifier, fw)
         return classifier
 
